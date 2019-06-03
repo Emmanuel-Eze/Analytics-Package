@@ -1,0 +1,213 @@
+create or replace package octave_pkg 
+AS
+
+function func_reg (p_state varchar2) return varchar2;
+function func_sex(p_sex varchar2) return varchar2;
+function func_age(p_dob date) return varchar2;
+function func_age_band (p_dob date) return varchar2;
+function func_NRGE (p_last_date date) return varchar2;
+function func_RGS (p_last_date date) return varchar2;
+function func_STATE_CODE (p_state varchar2) return varchar2;
+
+END octave_pkg;
+/
+
+
+CREATE OR REPLACE PACKAGE BODY octave_pkg
+AS
+   
+function func_reg (p_state varchar2) return varchar2
+as
+v_state varchar2(50);
+v_reg varchar2(50);
+begin
+SELECT   p_state 
+INTO v_state FROM dual;
+
+if LOWER(trim(v_state)) IN ('benue state','kogi state','kwara state','nasarawa state','nassarawa state','niger state','plateau state','fct','fct state','benue','kogi','kwara','nasarawa','nassarawa','niger','plateau') THEN v_reg := 'North Central';
+             elsif LOWER(trim(v_state)) IN ('adamawa state','bauchi state','borno state','gombe state','taraba state','yobe state','adamawa','bauchi','borno','gombe','taraba','yobe') THEN v_reg := 'North East'; 
+             elsif LOWER(trim(v_state)) IN ('jigawa state','kaduna state','kano state','katsina state','kebbi state','sokoto state','zamfara state','jigawa','kaduna','kano','katsina','kebbi','sokoto','zamfara') THEN v_reg := 'North West'; 
+             elsif LOWER(trim(v_state)) IN ('abia state','anambra state','ebonyi state','enugu state','imo state','abia','anambra','ebonyi','enugu','imo') THEN v_reg := 'South East';
+             elsif LOWER(trim(v_state)) IN ('akwa ibom state','bayelsa state','cross river state','rivers state','delta state','edo state','akwa ibom','bayelsa','cross river','rivers','delta','edo') THEN v_reg := 'South South'; 
+             elsif LOWER(trim(v_state)) IN ('ekiti state','lagos state','ogun state','ondo state','osun state','oyo state','ekiti','lagos','ogun','ondo','osun','oyo') THEN v_reg := 'South West';
+             ELSE  v_reg :='Other';
+             END if;
+  return(v_reg);
+end ;
+
+
+function func_sex(p_sex varchar2) return varchar2
+as
+v_sex varchar2(50);
+v_gen varchar2(50);
+begin
+SELECT   p_sex 
+INTO v_sex FROM dual;
+
+if LOWER(trim(v_sex)) like 'm%' THEN v_gen := 'Male';
+             elsif LOWER(trim(v_sex)) like 'f%' THEN v_gen := 'Female'; 
+             ELSE  v_gen :='Other';
+             END if;
+  return(v_gen);
+end ;
+
+
+function func_age(p_dob date) return varchar2
+as
+v_dob date;
+v_age varchar2(50);
+begin
+SELECT   p_dob 
+INTO v_dob 
+FROM dual;
+
+v_age := floor((trunc(sysdate) - v_dob)/365);
+
+return(v_age);
+end ;
+
+
+function func_age_band (p_dob date) return varchar2
+as
+v_dob date;
+v_age_band varchar2(50);
+begin
+SELECT   p_dob 
+INTO v_dob 
+FROM dual;
+
+if floor((trunc(sysdate) - v_dob)/365) < 16 then v_age_band := '01: Below 16Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  16 and 21 then v_age_band := '02:16 - 21Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  21 and 27 then v_age_band := '03:22 - 27Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  27 and 32 then v_age_band := '04:28 - 32Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  32 and 38 then v_age_band := '05:33 - 38Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  38 and 44 then v_age_band := '06:39 - 44Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  44 and 55 then v_age_band := '07:45 - 55Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  55 and 65 then v_age_band := '08:56 - 65Yrs';
+             elsif floor((trunc(sysdate) - v_dob)/365)  > 65 then v_age_band := '09:Above 65';
+         else v_age_band :=  'OTHERS';
+             END if;
+  return(v_age_band);
+end ;
+
+
+
+function func_NRGE (p_last_date date) return varchar2
+as
+v_DOB date;
+v_NRGE varchar2(50);
+
+begin
+SELECT  trunc(p_last_date)
+INTO v_DOB 
+FROM dual;
+
+v_NRGE := trunc((sysdate) - v_DOB);
+
+  return(v_NRGE);
+end ;
+
+
+
+function func_RGS (p_last_date date) return varchar2
+as
+v_DOB date;
+v_RGS varchar2(50);
+
+begin
+SELECT  trunc(p_last_date)
+INTO v_DOB 
+FROM dual;
+
+    if trunc((sysdate) - v_DOB) <=7 then v_RGS :='01 RGS0-7'  ;
+    elsif trunc((sysdate) - v_DOB) > 7 and trunc((sysdate) - v_DOB) <=30 then v_RGS :='02 RGS8-30';
+    elsif trunc((sysdate) - v_DOB) > 30 and trunc((sysdate) - v_DOB) <=60 then v_RGS :='03 RGS31-60';
+    elsif trunc((sysdate) - v_DOB) > 60 and trunc((sysdate) - v_DOB) <=90 then v_RGS :='04 RGS61-90';
+    elsif trunc((sysdate) - v_DOB) > 90 and trunc((sysdate) - v_DOB) <=365 then v_RGS :='05 RGS91-365';
+    elsif trunc((sysdate) - v_DOB) > 90 and trunc((sysdate) - v_DOB) <=365 then v_RGS :='06 RGS366+';
+    else null;
+    end if;
+  return(v_RGS);
+end ;
+
+
+
+function func_STATE_CODE (p_state varchar2) return varchar2
+AS 
+v_state_code varchar2(50);
+begin
+
+select decode (upper(p_state),'BAYELSA STATE','BY','FCT','FC','KADUNA STATE','KD','KANO STATE','KN','KATSINA STATE','KT')
+into v_state_code
+from dual;
+
+ return (v_state_code);
+
+END;
+ 
+END octave_pkg;
+/
+
+create or replace package OCTAVE_BOBR_PKG 
+AS
+
+function func_BOBR_VOL (p_M1_vol nUmber,p_M2_vol nUmber,p_M3_vol nUmber) return varchar2;
+function func_DRIP (p_M1 nUmber) return varchar2;
+
+
+END OCTAVE_BOBR_PKG;
+/
+
+
+
+CREATE OR REPLACE PACKAGE BODY OCTAVE_BOBR_PKG
+AS
+
+function  func_BOBR_VOL (p_M1_vol number,p_M2_vol number,p_M3_vol number) return varchar2
+as
+v_M1_vol        NUMBER;
+v_M2_vol        NUMBER;
+v_M3_vol        NUMBER;
+BOBR_M1         varchar2(50);
+
+begin
+SELECT p_M1_vol,p_M3_vol,p_M3_vol
+INTO v_M1_vol, v_M2_vol, v_M3_vol
+FROM dual;
+            IF (nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2=0 AND nvl(v_M1_vol,0)=0 THEN BOBR_M1   :=  '01_NON_USER';
+         ELSIF (nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2=0 AND nvl(v_M1_vol,0)>0 THEN BOBR_M1 :=  '02_NEW_USER';
+         ELSIF (nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2>0 AND nvl(v_M1_vol,0)=0 THEN BOBR_M1 :=  '03_STOPPER';
+         ELSIF  nvl(v_M1_vol,0)>=1.25*(nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2 THEN BOBR_M1:=  '04_GROWER';
+         ELSIF  nvl(v_M1_vol,0)<=0.75*(nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2 THEN BOBR_M1:=  '05_DROPPER';
+         ELSE BOBR_M1 := '06_FLAT';  
+         END IF;
+  return(BOBR_M1);
+end ;
+
+function func_DRIP (p_M1 nUmber) return varchar2
+as
+DRIP        NUMBER;
+
+begin
+SELECT CASE WHEN p_M1 = 0 THEN  '00_ZERO'
+            WHEN p_M1 <2 THEN  '01_POOR'
+            WHEN p_M1 <5 THEN  '02_IRREGULAR'
+            WHEN p_M1 <11 THEN  '03_REGULAR'
+            WHEN p_M1 >=15 THEN  '04_DAILY'  
+            END DRIP
+INTO DRIP
+FROM dual;
+           
+return(DRIP);
+  
+end;
+
+END OCTAVE_BOBR_PKG;
+/
+
+
+select count(distinct cust_id), bobr_m1 from (
+select cust_id, CR_VOL_M1,CR_VOL_M2,CR_VOL_M1,OCTAVE_BOBR_PKG.func_BOBR_VOL(CR_VOL_M1,CR_VOL_M2,CR_VOL_M3)bobr_m1,
+                                              OCTAVE_BOBR_PKG.func_BOBR_VOL(CR_VOL_M2,CR_VOL_M3,CR_VOL_M4)bobr_m2
+from AFF.FCMB_DPM_BOBR_V1
+) group by bobr_m1
