@@ -1,13 +1,27 @@
+---- octave_pkg contains functions for data analytics modelling for both demographic and transactinal segmentation. They accept parameters to produce an output.
+
+-- func_reg takes in Nigerian state name as parameter and classifies them into the geo-political zones in Nigeria.
+-- func_state_code takes in Nigerian state name as parameter and translates them into their corresponding State Codes.
+-- func_sex translate the provided gender into 'Male', 'Female' or 'Others'.
+-- func_age takes in the data of birth in a given data set and computes the age.
+-- func_age_band takes in the data of birth in a given data set and segments the data entries into age band segments.
+-- func_NRGE takes in the max date/last seen date in a transactional data as parameter and computes the number of days since the transaction was done
+-- func_RGS takes in the max date/last seen date in a transactional data as parameter and segments the data into bands of Revenue Generating Session. 
+-- func_BOBR takes in 3 parameters of monthly spend (m1, m2 and m3) then segments the customer based on a comparison between the average spend in m2 and m3 to the spend in m1.
+-- func_DRIP takes in the count of transacting days and uses that to segment customers.
+
 create or replace package octave_pkg 
 AS
 
 function func_reg (p_state varchar2) return varchar2;
+function func_state_code (p_state varchar2) return varchar2;
 function func_sex(p_sex varchar2) return varchar2;
 function func_age(p_dob date) return varchar2;
 function func_age_band (p_dob date) return varchar2;
 function func_NRGE (p_last_date date) return varchar2;
 function func_RGS (p_last_date date) return varchar2;
-function func_STATE_CODE (p_state varchar2) return varchar2;
+function func_BOBR (p_M1_vol nUmber,p_M2_vol nUmber,p_M3_vol nUmber) return varchar2;
+function func_DRIP (p_M1 nUmber) return varchar2;
 
 END octave_pkg;
 /
@@ -34,6 +48,20 @@ if LOWER(trim(v_state)) IN ('benue state','kogi state','kwara state','nasarawa s
              END if;
   return(v_reg);
 end ;
+
+
+function func_STATE_CODE (p_state varchar2) return varchar2
+AS 
+v_state_code varchar2(50);
+begin
+
+select decode (upper(p_state),'BAYELSA STATE','BY','FCT','FC','KADUNA STATE','KD','KANO STATE','KN','KATSINA STATE','KT')
+into v_state_code
+from dual;
+
+ return (v_state_code);
+
+END;
 
 
 function func_sex(p_sex varchar2) return varchar2
@@ -131,58 +159,27 @@ FROM dual;
 end ;
 
 
-
-function func_STATE_CODE (p_state varchar2) return varchar2
-AS 
-v_state_code varchar2(50);
-begin
-
-select decode (upper(p_state),'BAYELSA STATE','BY','FCT','FC','KADUNA STATE','KD','KANO STATE','KN','KATSINA STATE','KT')
-into v_state_code
-from dual;
-
- return (v_state_code);
-
-END;
- 
-END octave_pkg;
-/
-
-create or replace package OCTAVE_BOBR_PKG 
-AS
-
-function func_BOBR_VOL (p_M1_vol nUmber,p_M2_vol nUmber,p_M3_vol nUmber) return varchar2;
-function func_DRIP (p_M1 nUmber) return varchar2;
-
-
-END OCTAVE_BOBR_PKG;
-/
-
-
-
-CREATE OR REPLACE PACKAGE BODY OCTAVE_BOBR_PKG
-AS
-
-function  func_BOBR_VOL (p_M1_vol number,p_M2_vol number,p_M3_vol number) return varchar2
+function  func_BOBR (p_M1 number,p_M2 number,p_M3 number) return varchar2
 as
-v_M1_vol        NUMBER;
-v_M2_vol        NUMBER;
-v_M3_vol        NUMBER;
-BOBR_M1         varchar2(50);
+v_M1        NUMBER;
+v_M2        NUMBER;
+v_M3        NUMBER;
+BOBR         varchar2(50);
 
 begin
-SELECT p_M1_vol,p_M3_vol,p_M3_vol
-INTO v_M1_vol, v_M2_vol, v_M3_vol
+SELECT p_M1,p_M2,p_M3
+INTO v_M1, v_M2, v_M3
 FROM dual;
-            IF (nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2=0 AND nvl(v_M1_vol,0)=0 THEN BOBR_M1   :=  '01_NON_USER';
-         ELSIF (nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2=0 AND nvl(v_M1_vol,0)>0 THEN BOBR_M1 :=  '02_NEW_USER';
-         ELSIF (nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2>0 AND nvl(v_M1_vol,0)=0 THEN BOBR_M1 :=  '03_STOPPER';
-         ELSIF  nvl(v_M1_vol,0)>=1.25*(nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2 THEN BOBR_M1:=  '04_GROWER';
-         ELSIF  nvl(v_M1_vol,0)<=0.75*(nvl(v_M2_vol,0) + nvl(v_M3_vol,0))/2 THEN BOBR_M1:=  '05_DROPPER';
-         ELSE BOBR_M1 := '06_FLAT';  
+            IF (nvl(v_M2,0) + nvl(v_M3,0))/2=0 AND nvl(v_M1,0)=0 THEN BOBR   :=  '01_NON_USER';
+         ELSIF (nvl(v_M2,0) + nvl(v_M3,0))/2=0 AND nvl(v_M1,0)>0 THEN BOBR :=  '02_NEW_USER';
+         ELSIF (nvl(v_M2,0) + nvl(v_M3,0))/2>0 AND nvl(v_M1,0)=0 THEN BOBR :=  '03_STOPPER';
+         ELSIF  nvl(v_M1,0)>=1.25*(nvl(v_M2,0) + nvl(v_M3,0))/2 THEN BOBR:=  '04_GROWER';
+         ELSIF  nvl(v_M1,0)<=0.75*(nvl(v_M2,0) + nvl(v_M3,0))/2 THEN BOBR:=  '05_DROPPER';
+         ELSE BOBR := '06_FLAT';  
          END IF;
-  return(BOBR_M1);
+  return(BOBR);
 end ;
+
 
 function func_DRIP (p_M1 nUmber) return varchar2
 as
@@ -202,12 +199,14 @@ return(DRIP);
   
 end;
 
-END OCTAVE_BOBR_PKG;
+END octave_pkg;
 /
+
+-- 
 
 
 select count(distinct cust_id), bobr_m1 from (
-select cust_id, CR_VOL_M1,CR_VOL_M2,CR_VOL_M1,OCTAVE_BOBR_PKG.func_BOBR_VOL(CR_VOL_M1,CR_VOL_M2,CR_VOL_M3)bobr_m1,
-                                              OCTAVE_BOBR_PKG.func_BOBR_VOL(CR_VOL_M2,CR_VOL_M3,CR_VOL_M4)bobr_m2
-from AFF.FCMB_DPM_BOBR_V1
+select cust_id, CR_VOL_M1,CR_VOL_M2,CR_VOL_M1,OCTAVE_BOBR_PKG.func_BOBR(CR_VOL_M1,CR_VOL_M2,CR_VOL_M3)bobr_m1,
+                                              OCTAVE_BOBR_PKG.func_BOBR(CR_VOL_M2,CR_VOL_M3,CR_VOL_M4)bobr_m2
+from table_name
 ) group by bobr_m1
