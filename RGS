@@ -1,0 +1,107 @@
+-- The script below computes the first time and the most recent time a customer performs a transaction in any month within the past 6 months
+
+
+-- CREATE TABLE RGS_TABLE AS 
+SELECT DISTINCT id_column, FIRST_SEEN_DATE, TXDATE LAST_SEEN_DATE,(( last_day(add_months(trunc(sysdate),-0))) - TXDATE) NRGE,
+          CASE WHEN (( last_day(add_months(trunc(sysdate),-0))) - TXDATE)<= 7  THEN '01_RGS7' -- change all date to end date
+               WHEN (( last_day(add_months(trunc(sysdate),-0))) - TXDATE)<= 30 THEN '02_RGS30'
+               WHEN (( last_day(add_months(trunc(sysdate),-0))) - TXDATE)<= 60 THEN '03_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-0))) - TXDATE)<= 90 THEN '04_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-0))) - TXDATE)<= 180 THEN '05_RGS180'
+               WHEN (( last_day(add_months(trunc(sysdate),-0))) - TXDATE)<= 366 THEN '06_RGS365'
+            ELSE '07_Others' END  RGS,
+            ( last_day(add_months(trunc(sysdate),-0))) REF_DATE
+  FROM (SELECT MAX(TXDATE) TXDATE, MIN(TXDATE) FIRST_SEEN_DATE,  as.id_column
+FROM Fcmb_customer_induced_tx aa -- Transaction Table
+         WHERE TXDATE BETWEEN ( last_day(add_months(trunc(sysdate),-0))) - 365 AND ( last_day(add_months(trunc(sysdate),-0)))  --- Start date and end date
+ GROUP BY as.id_column) 
+
+
+UNION ALL 
+
+SELECT DISTINCT id_column, FIRST_SEEN_DATE, TXDATE LAST_SEEN_DATE,(( last_day(add_months(trunc(sysdate),-1))) - TXDATE) NRGE,
+          CASE WHEN (( last_day(add_months(trunc(sysdate),-1))) - TXDATE)<= 7  THEN '01_RGS7' -- change all date to end date
+               WHEN (( last_day(add_months(trunc(sysdate),-1))) - TXDATE)<= 30 THEN '02_RGS30'
+               WHEN (( last_day(add_months(trunc(sysdate),-1))) - TXDATE)<= 60 THEN '03_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-1))) - TXDATE)<= 90 THEN '04_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-1))) - TXDATE)<= 180 THEN '05_RGS180'
+               WHEN (( last_day(add_months(trunc(sysdate),-1))) - TXDATE)<= 366 THEN '06_RGS365'
+            ELSE '07_Others' END  RGS,
+            ( last_day(add_months(trunc(sysdate),-1))) REF_DATE
+  FROM (SELECT MAX(TXDATE) TXDATE, MIN(TXDATE) FIRST_SEEN_DATE,  as.id_column
+FROM Fcmb_customer_induced_tx aa -- Transaction Table
+         WHERE TXDATE BETWEEN ( last_day(add_months(trunc(sysdate),-1))) - 365 AND ( last_day(add_months(trunc(sysdate),-1)))  --- Start date and end date
+ GROUP BY as.id_column)
+
+
+UNION ALL 
+
+
+SELECT DISTINCT id_column, FIRST_SEEN_DATE, TXDATE LAST_SEEN_DATE,(( last_day(add_months(trunc(sysdate),-2))) - TXDATE) NRGE,
+          CASE WHEN (( last_day(add_months(trunc(sysdate),-2))) - TXDATE)<= 7  THEN '01_RGS7' -- change all date to end date
+               WHEN (( last_day(add_months(trunc(sysdate),-2))) - TXDATE)<= 30 THEN '02_RGS30'
+               WHEN (( last_day(add_months(trunc(sysdate),-2))) - TXDATE)<= 60 THEN '03_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-2))) - TXDATE)<= 90 THEN '04_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-2))) - TXDATE)<= 180 THEN '05_RGS180'
+               WHEN (( last_day(add_months(trunc(sysdate),-2))) - TXDATE)<= 366 THEN '06_RGS365'
+            ELSE '07_Others' END  RGS,
+            ( last_day(add_months(trunc(sysdate),-2))) REF_DATE
+  FROM (SELECT MAX(TXDATE) TXDATE, MIN(TXDATE) FIRST_SEEN_DATE,  as.id_column
+FROM Fcmb_customer_induced_tx aa -- Transaction Table
+         WHERE TXDATE BETWEEN ( last_day(add_months(trunc(sysdate),-2))) - 365 AND ( last_day(add_months(trunc(sysdate),-2))) --- Start date and end date 
+ GROUP BY as.id_column) 
+
+ 
+UNION ALL 
+
+
+SELECT DISTINCT id_column, FIRST_SEEN_DATE, TXDATE LAST_SEEN_DATE,(( last_day(add_months(trunc(sysdate),-3))) - TXDATE) NRGE,
+          CASE WHEN (( last_day(add_months(trunc(sysdate),-3))) - TXDATE)<= 7  THEN '01_RGS7' -- change all date to end date
+               WHEN (( last_day(add_months(trunc(sysdate),-3))) - TXDATE)<= 30 THEN '02_RGS30'
+               WHEN (( last_day(add_months(trunc(sysdate),-3))) - TXDATE)<= 60 THEN '03_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-3))) - TXDATE)<= 90 THEN '04_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-3))) - TXDATE)<= 180 THEN '05_RGS180'
+               WHEN (( last_day(add_months(trunc(sysdate),-3))) - TXDATE)<= 366 THEN '06_RGS365'
+            ELSE '07_Others' END  RGS,
+            ( last_day(add_months(trunc(sysdate),-3))) REF_DATE
+  FROM (SELECT MAX(TXDATE) TXDATE, MIN(TXDATE) FIRST_SEEN_DATE,  as.id_column
+FROM Fcmb_customer_induced_tx aa -- Transaction Table
+         WHERE TXDATE BETWEEN ( last_day(add_months(trunc(sysdate),-3))) - 365 AND ( last_day(add_months(trunc(sysdate),-3)))  --- Start date and end date 
+ GROUP BY as.id_column) 
+
+ 
+UNION ALL 
+
+
+SELECT DISTINCT id_column, FIRST_SEEN_DATE, TXDATE LAST_SEEN_DATE,(( last_day(add_months(trunc(sysdate),-4))) - TXDATE) NRGE,
+          CASE WHEN (( last_day(add_months(trunc(sysdate),-4))) - TXDATE)<= 7  THEN '01_RGS7' -- change all date to end date
+               WHEN (( last_day(add_months(trunc(sysdate),-4))) - TXDATE)<= 30 THEN '02_RGS30'
+               WHEN (( last_day(add_months(trunc(sysdate),-4))) - TXDATE)<= 60 THEN '03_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-4))) - TXDATE)<= 90 THEN '04_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-4))) - TXDATE)<= 180 THEN '05_RGS180'
+               WHEN (( last_day(add_months(trunc(sysdate),-4))) - TXDATE)<= 366 THEN '06_RGS365'
+            ELSE '07_Others' END  RGS,
+            ( last_day(add_months(trunc(sysdate),-4))) REF_DATE
+  FROM (SELECT MAX(TXDATE) TXDATE, MIN(TXDATE) FIRST_SEEN_DATE,  as.id_column
+FROM Fcmb_customer_induced_tx aa -- Transaction Table
+         WHERE TXDATE BETWEEN ( last_day(add_months(trunc(sysdate),-4))) - 365 AND ( last_day(add_months(trunc(sysdate),-4))) --- Start date and end date 
+ GROUP BY as.id_column)
+
+ 
+UNION ALL 
+
+
+SELECT DISTINCT id_column, FIRST_SEEN_DATE, TXDATE LAST_SEEN_DATE,(( last_day(add_months(trunc(sysdate),-5))) - TXDATE) NRGE,
+          CASE WHEN (( last_day(add_months(trunc(sysdate),-5))) - TXDATE)<= 7  THEN '01_RGS7' -- change all date to end date
+               WHEN (( last_day(add_months(trunc(sysdate),-5))) - TXDATE)<= 30 THEN '02_RGS30'
+               WHEN (( last_day(add_months(trunc(sysdate),-5))) - TXDATE)<= 60 THEN '03_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-5))) - TXDATE)<= 90 THEN '04_RGS90'
+               WHEN (( last_day(add_months(trunc(sysdate),-5))) - TXDATE)<= 180 THEN '05_RGS180'
+               WHEN (( last_day(add_months(trunc(sysdate),-5))) - TXDATE)<= 366 THEN '06_RGS365'
+            ELSE '07_Others' END  RGS,
+            ( last_day(add_months(trunc(sysdate),-5))) REF_DATE
+  FROM (SELECT MAX(TXDATE) TXDATE, MIN(TXDATE) FIRST_SEEN_DATE,  as.id_column
+FROM Fcmb_customer_induced_tx aa -- Transaction Table
+         WHERE TXDATE BETWEEN ( last_day(add_months(trunc(sysdate),-5))) - 365 AND ( last_day(add_months(trunc(sysdate),-5)))  --- Start date and end date 
+ GROUP BY as.id_column)
+
