@@ -1,5 +1,10 @@
 ---- octave_pkg contains functions for data analytics modelling for both demographic and transactinal segmentation. They accept parameters to produce an output.
 
+
+CREATE OR REPLACE package octave_pkg 
+AS
+
+/*
 -- func_reg takes in Nigerian state name as parameter and classifies them into the geo-political zones in Nigeria.
 -- func_state_code takes in Nigerian state name as parameter and translates them into their corresponding State Codes.
 -- func_sex translate the provided gender into 'Male', 'Female' or 'Others'.
@@ -7,11 +12,12 @@
 -- func_age_band takes in the data of birth in a given data set and segments the data entries into age band segments.
 -- func_NRGE takes in the max date/last seen date in a transactional data as parameter and computes the number of days since the transaction was done
 -- func_RGS takes in the max date/last seen date in a transactional data as parameter and segments the data into bands of Revenue Generating Session. 
--- func_BOBR takes in 3 parameters of monthly spend (m1, m2 and m3) then segments the customer based on a comparison between the average spend in m2 and m3 to the spend in m1.
 -- func_DRIP takes in the count of transacting days and uses that to segment customers.
+-- func_BOBR takes in 3 parameters of monthly spend (m1, m2 and m3) then segments the customer based on a comparison between the average spend in m2 and m3 to the spend in m1.
+-- func_weekend takes a date as parameter then returns 'Yes' or 'No' for wether the date falls in a weekend or not.
+-- func_holiday takes a date as parameter then returns 'Yes' or 'No' for wether the date falls in a Nigerian public holiday in 2017
+*/
 
-create or replace package octave_pkg 
-AS
 
 function func_reg (p_state varchar2) return varchar2;
 function func_state_code (p_state varchar2) return varchar2;
@@ -20,8 +26,11 @@ function func_age(p_dob date) return varchar2;
 function func_age_band (p_dob date) return varchar2;
 function func_NRGE (p_last_date date) return varchar2;
 function func_RGS (p_last_date date) return varchar2;
-function func_BOBR (p_M1_vol nUmber,p_M2_vol nUmber,p_M3_vol nUmber) return varchar2;
+function  func_BOBR(p_M1 number,p_M2 number,p_M3 number) return varchar2;
 function func_DRIP (p_M1 nUmber) return varchar2;
+function func_weekend (p_date date) return varchar2;
+function func_holiday(p_date date) return varchar2;   -- Nigerian public holidays in  2017
+
 
 END octave_pkg;
 /
@@ -38,16 +47,20 @@ begin
 SELECT   p_state 
 INTO v_state FROM dual;
 
-if LOWER(trim(v_state)) IN ('benue state','kogi state','kwara state','nasarawa state','nassarawa state','niger state','plateau state','fct','fct state','benue','kogi','kwara','nasarawa','nassarawa','niger','plateau') THEN v_reg := 'North Central';
+            if LOWER(trim(v_state)) IN ('benue state','kogi state','kwara state','nasarawa state','nassarawa state','niger state','plateau state','fct','fct state','benue','kogi','kwara','nasarawa','nassarawa','niger','plateau') THEN v_reg := 'North Central';
              elsif LOWER(trim(v_state)) IN ('adamawa state','bauchi state','borno state','gombe state','taraba state','yobe state','adamawa','bauchi','borno','gombe','taraba','yobe') THEN v_reg := 'North East'; 
              elsif LOWER(trim(v_state)) IN ('jigawa state','kaduna state','kano state','katsina state','kebbi state','sokoto state','zamfara state','jigawa','kaduna','kano','katsina','kebbi','sokoto','zamfara') THEN v_reg := 'North West'; 
              elsif LOWER(trim(v_state)) IN ('abia state','anambra state','ebonyi state','enugu state','imo state','abia','anambra','ebonyi','enugu','imo') THEN v_reg := 'South East';
              elsif LOWER(trim(v_state)) IN ('akwa ibom state','bayelsa state','cross river state','rivers state','delta state','edo state','akwa ibom','bayelsa','cross river','rivers','delta','edo') THEN v_reg := 'South South'; 
              elsif LOWER(trim(v_state)) IN ('ekiti state','lagos state','ogun state','ondo state','osun state','oyo state','ekiti','lagos','ogun','ondo','osun','oyo') THEN v_reg := 'South West';
-             ELSE  v_reg :='Other';
+             elsif LOWER(trim(v_state)) = 'non-resident' then  v_reg :='NON-RESIDENT';
+             elsif LOWER(trim(v_state)) IS NULL then  v_reg :=NULL;
              END if;
   return(v_reg);
 end ;
+
+
+
 
 
 function func_STATE_CODE (p_state varchar2) return varchar2
@@ -73,7 +86,8 @@ SELECT   p_sex
 INTO v_sex FROM dual;
 
 if LOWER(trim(v_sex)) like 'm%' THEN v_gen := 'Male';
-             elsif LOWER(trim(v_sex)) like 'f%' THEN v_gen := 'Female'; 
+             elsif LOWER(trim(v_sex)) like 'f%' THEN v_gen := 'Female';
+             elsif LOWER(trim(v_sex)) IS NULL THEN v_gen := NULL; 
              ELSE  v_gen :='Other';
              END if;
   return(v_gen);
@@ -104,16 +118,14 @@ SELECT   p_dob
 INTO v_dob 
 FROM dual;
 
-if floor((trunc(sysdate) - v_dob)/365) < 16 then v_age_band := '01: Below 16Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  16 and 21 then v_age_band := '02:16 - 21Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  21 and 27 then v_age_band := '03:22 - 27Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  27 and 32 then v_age_band := '04:28 - 32Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  32 and 38 then v_age_band := '05:33 - 38Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  38 and 44 then v_age_band := '06:39 - 44Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  44 and 55 then v_age_band := '07:45 - 55Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365) between  55 and 65 then v_age_band := '08:56 - 65Yrs';
-             elsif floor((trunc(sysdate) - v_dob)/365)  > 65 then v_age_band := '09:Above 65';
-         else v_age_band :=  'OTHERS';
+if floor((trunc(sysdate) - v_dob)/365)   < 15 then v_age_band := '14 and Below';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  15 and 24 then v_age_band := '15 - 24';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  25 and 34 then v_age_band := '25 - 34';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  35 and 44 then v_age_band := '35 - 44';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  45 and 54 then v_age_band := '45 - 54';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  55 and 64 then v_age_band := '55 - 64';
+             elsif floor((trunc(sysdate) - v_dob)/365)  > 64 then v_age_band := '65 and Above';
+        --- else v_age_band IS NULL;
              END if;
   return(v_age_band);
 end ;
@@ -147,19 +159,21 @@ SELECT  trunc(p_last_date)
 INTO v_DOB 
 FROM dual;
 
-    if trunc((sysdate) - v_DOB) <=7 then v_RGS :='01 RGS0-7'  ;
-    elsif trunc((sysdate) - v_DOB) > 7 and trunc((sysdate) - v_DOB) <=30 then v_RGS :='02 RGS8-30';
-    elsif trunc((sysdate) - v_DOB) > 30 and trunc((sysdate) - v_DOB) <=60 then v_RGS :='03 RGS31-60';
-    elsif trunc((sysdate) - v_DOB) > 60 and trunc((sysdate) - v_DOB) <=90 then v_RGS :='04 RGS61-90';
-    elsif trunc((sysdate) - v_DOB) > 90 and trunc((sysdate) - v_DOB) <=365 then v_RGS :='05 RGS91-365';
-    elsif trunc((sysdate) - v_DOB) > 90 and trunc((sysdate) - v_DOB) <=365 then v_RGS :='06 RGS366+';
+    if trunc((sysdate) - v_DOB) <=7 then v_RGS :='0-7 Days'  ;
+    elsif trunc((sysdate) - v_DOB) > 7 and trunc((sysdate) - v_DOB) <=30 then v_RGS :='8-30 Days';
+    elsif trunc((sysdate) - v_DOB) > 30 and trunc((sysdate) - v_DOB) <=60 then v_RGS :='31-60 Days';
+    elsif trunc((sysdate) - v_DOB) > 60 and trunc((sysdate) - v_DOB) <=90 then v_RGS :='61-90 Days';
+    elsif trunc((sysdate) - v_DOB) > 90 and trunc((sysdate) - v_DOB) <=365 then v_RGS :='91-365 Days';
+    elsif trunc((sysdate) - v_DOB) > 90 and trunc((sysdate) - v_DOB) <=365 then v_RGS :='366+ Days';
     else null;
     end if;
   return(v_RGS);
 end ;
 
 
-function  func_BOBR (p_M1 number,p_M2 number,p_M3 number) return varchar2
+
+function  func_BOBR(p_M1 number,p_M2 number,p_M3 number) return varchar2
+
 as
 v_M1        NUMBER;
 v_M2        NUMBER;
@@ -167,37 +181,87 @@ v_M3        NUMBER;
 BOBR         varchar2(50);
 
 begin
+
 SELECT p_M1,p_M2,p_M3
 INTO v_M1, v_M2, v_M3
 FROM dual;
-            IF (nvl(v_M2,0) + nvl(v_M3,0))/2=0 AND nvl(v_M1,0)=0 THEN BOBR   :=  '01_NON_USER';
+
+         IF (nvl(v_M2,0) + nvl(v_M3,0))/2=0 AND nvl(v_M1,0)=0 THEN BOBR   :=  '01_NON_USER';
          ELSIF (nvl(v_M2,0) + nvl(v_M3,0))/2=0 AND nvl(v_M1,0)>0 THEN BOBR :=  '02_NEW_USER';
          ELSIF (nvl(v_M2,0) + nvl(v_M3,0))/2>0 AND nvl(v_M1,0)=0 THEN BOBR :=  '03_STOPPER';
          ELSIF  nvl(v_M1,0)>=1.25*(nvl(v_M2,0) + nvl(v_M3,0))/2 THEN BOBR:=  '04_GROWER';
          ELSIF  nvl(v_M1,0)<=0.75*(nvl(v_M2,0) + nvl(v_M3,0))/2 THEN BOBR:=  '05_DROPPER';
          ELSE BOBR := '06_FLAT';  
          END IF;
+
   return(BOBR);
+
 end ;
 
 
-function func_DRIP (p_M1 nUmber) return varchar2
+function func_DRIP (p_M1 number) return varchar2
 as
-DRIP        NUMBER;
+
+v_DRIP      number;
+DRIP        varchar2(50);
 
 begin
-SELECT CASE WHEN p_M1 = 0 THEN  '00_ZERO'
-            WHEN p_M1 <2 THEN  '01_POOR'
-            WHEN p_M1 <5 THEN  '02_IRREGULAR'
-            WHEN p_M1 <11 THEN  '03_REGULAR'
-            WHEN p_M1 >=15 THEN  '04_DAILY'  
-            END DRIP
-INTO DRIP
-FROM dual;
-           
+
+SELECT TO_NUMBER(nvl(p_M1,0))
+INTO v_DRIP
+FROM dual;  
+
+    IF TO_NUMBER(v_DRIP) = 0  THEN  DRIP:=  'ZERO';
+            ELSIF TO_NUMBER(v_DRIP) <2  THEN  DRIP:=   'POOR';
+            ELSIF TO_NUMBER(v_DRIP) <5  THEN  DRIP:=   'IRREGULAR';
+            ELSIF TO_NUMBER(v_DRIP) <12  THEN  DRIP:=   'REGULAR';
+            ELSIF TO_NUMBER(v_DRIP) >=12  THEN  DRIP:=   'DAILY';
+            ELSE   DRIP:=  'NON-NUMERIC';
+      END IF ;        
+
 return(DRIP);
-  
+
 end;
+
+
+
+function func_weekend(p_date date) return varchar2
+AS 
+TXN_DATE date;
+WEEKEND VARCHAR2(50);
+begin
+
+TXN_DATE:=p_date;
+/*
+select decode(UPPER (TRIM (TO_CHAR (trunc(p_date), 'day'))),'SATURDAY', 'Y','SUNDAY', 'Y','N')
+into TXN_DATE
+from dual;
+*/
+
+IF UPPER (TO_CHAR (trunc(p_date), 'day')) LIKE 'S%' THEN WEEKEND :='Y';
+ELSE WEEKEND :='N';
+END IF;
+
+return (WEEKEND);
+
+END; 
+
+
+function func_holiday(p_date date) return varchar2
+AS 
+TXN_DATE date;
+v_holiday VARCHAR2(50);
+begin
+
+TXN_DATE:=p_date;
+
+IF TXN_DATE in ('01-JAN-2017', '14-APR-2017', '17-APR-2017', '01-MAY-2017', '29-MAY-2017', '12-JUN-2017', '26-JUN-2017', '27-JUN-2017', '2-SEP-2017', '3-SEP-2017', '22-SEP-2017', '01-OCT-2017', '01-DEC-2017', '22-DEC-2017', '24-DEC-2017', '25-DEC-2017', '26-DEC-2017', '31-DEC-2017') then v_holiday := 'YES';
+else v_holiday := 'NO'; 
+END IF;
+
+return (v_holiday);
+
+END; 
 
 END octave_pkg;
 /
