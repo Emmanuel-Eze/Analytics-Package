@@ -1,0 +1,59 @@
+---- Kindly not that the below script were executed in an oracle database
+
+--- create a table for the data set to be used
+CREATE TABLE RAILS
+(
+  ID                        VARCHAR2(100),
+  CUSTOMER_ID               VARCHAR2(100),
+  DATE_OF_BIRTH             DATE,
+  PROVINCE                  VARCHAR2(100),
+  DISTRICT                  VARCHAR2(100),
+  CUSTOMER_BRANCH           VARCHAR2(100),
+  PRINCIPAL_AMT             NUMBER,
+  PAID_PRINCIPAL            NUMBER,
+  PAID_INTEREST             NUMBER,
+  PAID_PENALTY              NUMBER,
+  TOTAL_REMAINING_PRINIPAL  NUMBER,
+  REMAINING_PRINCIPAL       NUMBER,
+  AMOUNT_DUE                NUMBER,
+  DUE_PRINCIPAL             NUMBER,
+  DUE_INTEREST              NUMBER,
+  DUE_PEN_INTEREST          NUMBER,
+  DUE_FEE                   NUMBER,
+  PAID_FEE                  NUMBER,
+  DUE_TAX                   NUMBER,
+  PAID_TAX                  NUMBER,
+  PREVIOUS_DAYS             NUMBER,
+  OVERDUE_DAYS              NUMBER,
+  EFFECTIVE_DATE            DATE,
+  MATURITY_DATE             DATE,
+  CREDITSCOREGROUP          VARCHAR2(100),
+  PAYMENTSTATUS             VARCHAR2(100),
+  DURATION                  NUMBER,
+  RETURNINGCUSTOMER         VARCHAR2(100),
+  CLASS                     VARCHAR2(100)
+);
+
+----Import the data into the table created above
+
+
+---- Query that extract already existing features and generate new features
+----- SMART_PKG.FUNC_AGE() is a custom package that takes in date (date of birth) and evaluates  age
+
+select *  from (
+    select 
+    CUSTOMER_ID, 
+    SMART_PKG.FUNC_AGE(DATE_OF_BIRTH)age,-- OCTAVE_PKG.FUNC_AGE_BAND(DATE_OF_BIRTH) age_band, 
+    PROVINCE, DISTRICT, CUSTOMER_BRANCH, 
+    PRINCIPAL_AMT, PAID_PRINCIPAL, PAID_INTEREST, PAID_PENALTY, TOTAL_REMAINING_PRINIPAL, REMAINING_PRINCIPAL, AMOUNT_DUE, DUE_PRINCIPAL, DUE_INTEREST, DUE_PEN_INTEREST,
+    case when PAID_PRINCIPAL < PRINCIPAL_AMT then 1 else 0 end f1,
+    case when REMAINING_PRINCIPAL < TOTAL_REMAINING_PRINIPAL then 1 else 0 end f2,
+    case when AMOUNT_DUE > DUE_PRINCIPAL then 1 else 0 end f3,
+    PAID_FEE, PAID_TAX,  PAID_FEE+PAID_TAX total_tax, 
+    PREVIOUS_DAYS, OVERDUE_DAYS, PREVIOUS_DAYS + OVERDUE_DAYS TOTAL_OVERDUE_DAYS,MATURITY_DATE-EFFECTIVE_DATE tenure,round((MATURITY_DATE-EFFECTIVE_DATE)/30) ee, DURATION,  
+    case when (PREVIOUS_DAYS =0 and OVERDUE_DAYS = 0) then 1 
+    when PREVIOUS_DAYS > OVERDUE_DAYS then   2
+    when (PREVIOUS_DAYS < 0 and OVERDUE_DAYS = 0) then 3 else 4 end f4,
+    PAYMENTSTATUS, RETURNINGCUSTOMER, CLASS,  CREDITSCOREGROUP
+from aff.rails order by 1
+);
