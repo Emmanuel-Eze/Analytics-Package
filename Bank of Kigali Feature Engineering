@@ -36,6 +36,66 @@ CREATE TABLE RAILS
 
 ----Import the data into the table created above
 
+---- Create package for custom dependent functions first
+---- SMART_PKG contains functions for data analytics modelling for both demographic and transactinal segmentation. They accept parameters to produce an output.
+
+---- create package specification
+CREATE OR REPLACE package SMART_PKG 
+AS
+
+/*
+-- func_age takes in the data of birth in a given data set and computes the age.
+-- func_age_band takes in the data of birth in a given data set and segments the data entries into age band segments.
+*/
+
+function func_age(p_dob date) return varchar2;
+function func_age_band (p_dob date) return varchar2;
+
+END SMART_PKG;
+/
+
+---- create package body
+CREATE OR REPLACE PACKAGE BODY SMART_PKG
+AS
+
+function func_age(p_dob date) return varchar2
+as
+v_dob date;
+v_age varchar2(50);
+begin
+SELECT   p_dob 
+INTO v_dob 
+FROM dual;
+
+v_age := floor((trunc(sysdate) - v_dob)/365);
+
+return(v_age);
+end ;
+
+
+function func_age_band (p_dob date) return varchar2
+as
+v_dob date;
+v_age_band varchar2(50);
+begin
+SELECT   p_dob 
+INTO v_dob 
+FROM dual;
+
+if floor((trunc(sysdate) - v_dob)/365)   < 15 then v_age_band := '14 and Below';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  15 and 24 then v_age_band := '15 - 24';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  25 and 34 then v_age_band := '25 - 34';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  35 and 44 then v_age_band := '35 - 44';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  45 and 54 then v_age_band := '45 - 54';
+             elsif floor((trunc(sysdate) - v_dob)/365) between  55 and 64 then v_age_band := '55 - 64';
+             elsif floor((trunc(sysdate) - v_dob)/365)  > 64 then v_age_band := '65 and Above';
+        --- else v_age_band IS NULL;
+             END if;
+  return(v_age_band);
+end ;
+
+END SMART_PKG;
+/
 
 ---- Query that extract already existing features and generate new features
 ----- SMART_PKG.FUNC_AGE() is a custom package that takes in date (date of birth) and evaluates  age
