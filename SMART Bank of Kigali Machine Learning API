@@ -1,0 +1,11 @@
+ Below are all the necesary links to enable consumption of the model created by team SMART
+
+API: NFdPgjumhAxVSl7XqgIcEq1GTs2OD+asRMBn2cQ6nABcvGrepVQO5/zKMhIj7mlbzHlfM1xI1OdDZXROEuEIxA==
+
+Secondary API: ZPU4JyHZuuS9YvVmySgPsNxDSoFFV/yE0O8UGAiSPGOoZ6CiSSNxtquJNlBlmENmZ/ctfvBoLGlXrF5pbchyfw==
+
+URL: https://ussouthcentral.services.azureml.net/workspaces/d1227724ad244625aaee57d5d113d301/services/5d2b6e78fa6b4b60b871ce99afd924a1/execute?api-version=2.0&format=swagger
+
+Batch Request: https://ussouthcentral.services.azureml.net/workspaces/d1227724ad244625aaee57d5d113d301/services/5d2b6e78fa6b4b60b871ce99afd924a1/jobs?api-version=2.0
+
+Deployable link: https://1drv.ms/x/s!ArGxBykau2gygiJQdBntu9Y2IKS5
