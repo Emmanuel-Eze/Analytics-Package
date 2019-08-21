@@ -57,3 +57,17 @@ select *  from (
     PAYMENTSTATUS, RETURNINGCUSTOMER, CLASS,  CREDITSCOREGROUP
 from aff.rails order by 1
 );
+
+
+----- The script below is a reblica of the above script but tweaked to execute on Microsoft Azure Machine Learning Platform
+
+select a.*,case when [Paid principal]
+ < [PRINCIPAL AMT] then 1 else 0 end DVar1,
+    case when [REMAINING PRINCIPAL] < [TOTAL REMAINING PRINIPAL] then 1 else 0 end DVar2,
+    case when [AMOUNT DUE] > [DUE PRINCIPAL] then 1 else 0 end DVar7,
+    [PREVIOUS DAYS] + [OVERDUE DAYS] as DVar3,[MATURITY DATE]-[EFFECTIVE DATE] as DVar4,round(([MATURITY DATE]-[EFFECTIVE DATE])/30) DVar5,
+    case when ([PREVIOUS DAYS] =0 and [OVERDUE DAYS] = 0) then 1 
+    when [PREVIOUS DAYS] > [OVERDUE DAYS] then   2
+    when ([PREVIOUS DAYS] < 0 and [OVERDUE DAYS] = 0) then 3 else 4 end DVar6
+         from t1 as a;
+
